@@ -18,7 +18,7 @@ FetchContent_MakeAvailable(googletest)
 
 # Add source to this project's executable.
 add_executable (TinyRenderer "src/TinyRenderer.cpp" "src/TinyRenderer.h" "src/tgaimage.h" 
-								"src/tgaimage.cpp" "src/geometry.h" "src/model.cpp" "src/model.h")
+								"src/tgaimage.cpp" "src/geometry.h" "src/model.cpp" "src/model.h" )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET TinyRenderer PROPERTY CXX_STANDARD 20)
@@ -28,7 +28,7 @@ enable_testing()
 
 add_executable(
 	hello_test
-	"test/hello_test.cpp")
+	"test/hello_test.cpp" )
 
 target_link_libraries(
 	hello_test

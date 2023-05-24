@@ -18,11 +18,12 @@ struct Vec2 {
 	template <class > friend std::ostream& operator<<(std::ostream& s, Vec2<t>& v);
 };
 
+// class representing a 3D vertex
 template <class t>
 struct Vec3 {
 	union {
 		struct { t x, y, z; };
-		struct {t ivert, iuv, inorm};
+		struct { t ivert, iuv, inorm; };
 		t raw[3];
 	};
 	Vec3() : x(0), y(0), z(0) {}
@@ -37,7 +38,7 @@ struct Vec3 {
 	template <class> friend std::ostream& operator <<(std::ostream& s, Vec3<t>& v);
 };
 
-typedef Vec2<float> Vec2f; // creating alias for templated Vec2 with float
+typedef Vec2<float> Vec2f; // typedef creates an alias for templated Vec2 with float
 typedef Vec2<int>	Vec2i;
 typedef Vec3<float> Vec3f;
 typedef Vec3<int>	Vec3i;

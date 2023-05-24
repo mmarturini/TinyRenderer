@@ -5,10 +5,17 @@
 #include <vector>
 #include "model.h"
 
+// class that allows to interface with Wavefront .obj file
+
+// the Constructor takes the path to the .obj file, read its format and saves in verts_ the set of vertices using Vec3f class
+// same for the faces but as std::vector
 Model::Model(const char* filename) : verts_(), faces_() {
 	std::ifstream in; // class to read data from files
 	in.open(filename, std::ifstream::in);
-	if (in.fail()) return;
+	if (in.fail()) {
+		throw std::runtime_error("Error in reading the file.");
+		return;
+	}
 	std::string line;
 	while (!in.eof()) { // eof is a member returning a boolean indicating whether end of file has been reached
 		std::getline(in, line); 

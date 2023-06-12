@@ -5,6 +5,7 @@
 #include<cmath>
 #include<stdlib.h>
 #include<iostream>
+#include<algorithm>
 #include"tgaimage.h"
 #include"model.h"
 #include"geometry.h"
@@ -60,6 +61,35 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage& image, TGAColor color) {
 	line(t1, t2, image, color);
 }
 
+Vec3f barycentricCoords(Vec2i point, Vec2i v0, Vec2i v1, Vec2i v2) {
+
+	float alpha = ((static_cast<float>(v1.v) - v2.v) * (point.u - v2.u) + (v2.u - v1.u) * (point.v - v2.v)) / ((v1.v - v2.v) * (v0.u - v2.u) + (v2.u - v1.u) * (v0.v - v2.v));
+	float beta = ((static_cast<float>(v2.v) - v0.v) * (point.u - v2.u) + (v0.u - v2.u) * (point.v - v2.v)) / ((v1.v - v2.v) * (v0.u - v2.u) + (v2.u - v1.u) * (v0.v - v2.v));
+	float gamma = 1.0f - alpha - beta;
+
+	return Vec3f(alpha, beta, gamma);
+}
+
+void drawFillTriangle(Vec2i v0, Vec2i v1, Vec2i v2, TGAImage& image, TGAColor color) {
+	// Determine bounding box of triangle
+	int minX{ std::min({v0.u, v1.u, v2.u})};
+	int maxX{ std::max({v0.u, v1.u, v2.u}) };
+	int minY{ std::min({v0.v, v1.v, v2.v}) };
+	int maxY{ std::max({v0.v, v1.v, v2.v}) };
+
+	// Loop through each pixel in bounding box
+	for (int y = minY; y <= maxY; y++) {
+		for (int x = minX; x <= maxX; x++) {
+			// Check if current pixel is inside triangle using barycentric coordinate method
+			Vec3f barycentric = barycentricCoords(Vec2i(x,y), v0, v1, v2);
+			if (barycentric.x < 0 || barycentric.y < 0 || barycentric.z < 0) {
+				continue;
+			}
+			image.set(x, y, color);
+		}
+	}
+}
+
 
 int main(int argc, char** argv) {
 
@@ -96,9 +126,9 @@ int main(int argc, char** argv) {
 	Vec2i t1[3] = { Vec2i(180, 50), Vec2i(150, 1), Vec2i(70, 180) };
 	Vec2i t2[3] = { Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180) };
 
-	triangle(t0[0], t0[1], t0[2], image, red);
-	triangle(t1[0], t1[1], t1[2], image, white);
-	triangle(t2[0], t2[1], t2[2], image, green);
+	drawFillTriangle(t0[0], t0[1], t0[2], image, red);
+	drawFillTriangle(t1[0], t1[1], t1[2], image, white);
+	drawFillTriangle(t2[0], t2[1], t2[2], image, green);
 
 	image.flip_vertically(); // I want to have the origin at left bottom corner of image
 	image.write_tga_file("output.tga");

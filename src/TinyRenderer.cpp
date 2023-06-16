@@ -6,6 +6,7 @@
 #include<stdlib.h>
 #include<iostream>
 #include<algorithm>
+#include<limits>
 #include"tgaimage.h"
 #include"model.h"
 #include"geometry.h"
@@ -13,9 +14,10 @@
 const TGAColor white = TGAColor(255, 255, 255, 255); // last value is for transparency (RGBa)
 const TGAColor red = TGAColor(255, 0, 0, 255);
 const TGAColor green = TGAColor(0, 255, 0, 255);
+const TGAColor blue = TGAColor(0, 0, 255, 255);
 Model* model = NULL;
 const int width = 800;
-const int height = 800;
+const int height = 500;
 
 
 void line(Vec2i v0, Vec2i v1, TGAImage& image, const TGAColor& color) {
@@ -62,11 +64,10 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage& image, TGAColor color) {
 }
 
 Vec3f barycentricCoords(Vec2i point, Vec2i v0, Vec2i v1, Vec2i v2) {
-
+	// Calculate barycentric coordinates of point in triangle
 	float alpha = ((static_cast<float>(v1.v) - v2.v) * (point.u - v2.u) + (v2.u - v1.u) * (point.v - v2.v)) / ((v1.v - v2.v) * (v0.u - v2.u) + (v2.u - v1.u) * (v0.v - v2.v));
 	float beta = ((static_cast<float>(v2.v) - v0.v) * (point.u - v2.u) + (v0.u - v2.u) * (point.v - v2.v)) / ((v1.v - v2.v) * (v0.u - v2.u) + (v2.u - v1.u) * (v0.v - v2.v));
 	float gamma = 1.0f - alpha - beta;
-
 	return Vec3f(alpha, beta, gamma);
 }
 
@@ -90,6 +91,26 @@ void drawFillTriangle(Vec2i v0, Vec2i v1, Vec2i v2, TGAImage& image, TGAColor co
 	}
 }
 
+void rasterize(Vec2i p0, Vec2i p1, TGAImage& image, TGAColor color, int ybuffer[]) {
+	// p0 and p1 are the two 2D points defining the line segment to be rasterized
+	// ybuffer is an array used to store the z-coordinates of previously drawns points on each scan line
+	if (p0.u > p1.u) {
+		std::swap(p0, p1);
+	}
+	// rasterization of line segment using Bresenham's algorithm
+	for (int x = p0.u; x <= p1.u; x++) {
+		float t = (x - p0.u) / static_cast<float>(p1.u - p0.u);
+		// t represents the interpolation factor between p0 and p1 (relative position of x on line segment)
+		int y = p0.v * (1.0f - t) + p1.v * t;
+		// y is the interpolated y-coordinate of x on the line segment
+		if (ybuffer[x] < y) {
+			ybuffer[x] = y;
+			image.set(x, 0, color);
+		}
+		// only highest point on each scan line is drawn
+	}
+}
+
 
 int main(int argc, char** argv) {
 
@@ -107,6 +128,7 @@ int main(int argc, char** argv) {
 	}
 
 	// African face rendering with lighting
+	/*
 	TGAImage image(width, height, TGAImage::RGB);
 	Vec3f light_dir(0, 0, -1); // define light_dirV
 
@@ -132,6 +154,43 @@ int main(int argc, char** argv) {
 	
 	image.flip_vertically(); // I want to have the origin at left bottom corner of image
 	image.write_tga_file("output.tga");
+	*/
+	
+	{
+		TGAImage scene(width, height, TGAImage::RGB);
+		// 2D mesh
+		line(Vec2i(20,34), Vec2i(744, 400), scene, red);
+		line(Vec2i(120, 434), Vec2i(444, 400), scene, green);
+		line(Vec2i(330, 463), Vec2i(594, 200), scene, blue);
+		// screen line
+		line(Vec2i(10, 10), Vec2i(790, 10), scene, white);
+
+		scene.flip_vertically();
+		scene.write_tga_file("scene.tga");
+	}
+
+	{
+		TGAImage render(width, 16, TGAImage::RGB);
+		int ybuffer[width];
+		for (int i = 0; i < width; i++) {
+			ybuffer[i] = std::numeric_limits<int>::min(); // returns the minimum representable value of the int type. It retrieves the lowest possible value that can be stored in an int variable
+		}
+		rasterize(Vec2i(20, 34), Vec2i(744, 400), render, red, ybuffer);
+		rasterize(Vec2i(120, 434), Vec2i(444, 400), render, green, ybuffer);
+		rasterize(Vec2i(330, 463), Vec2i(594, 200), render, blue, ybuffer);
+
+		// widen 1-pixel image
+		for (int i = 0; i < width; i++) {
+			for (int j = 1; j < 16; j++) {
+				render.set(i, j, render.get(i, 0));
+			}
+		}
+
+		render.flip_vertically();
+		render.write_tga_file("render.tga");
+	}
+
+
 	std::cout << "Image rendered successfully" << std::endl;
 	delete model;
 	return 0;

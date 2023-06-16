@@ -6,8 +6,8 @@
 
 class Model {
 private:
-	std::vector<Vec3f> verts_; // std::vector of Vec3f
-	std::vector<std::vector<int>> faces_;
+	std::vector<Vec3f> verts_;
+	std::vector<std::vector<int> > faces_;
 public:
 	Model(const char* filename);
 	~Model();
@@ -17,4 +17,4 @@ public:
 	std::vector<int> face(int idx);
 };
 
-#endif // __MODEL_H__
+#endif //__MODEL_H__
